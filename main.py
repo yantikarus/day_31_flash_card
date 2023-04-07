@@ -6,27 +6,29 @@ BACKGROUND_COLOR = "#B1DDC6"
 
 
 # -----------------------READ DATA------------------------------------
-data = pandas.read_csv("./data/french_words.csv")
-data_as_dict = pandas.DataFrame.to_dict(data, orient="records")
-print(data_as_dict)
-current_card = {}
-known_words = []
-unknown_words = []
 
-# flip_timer = 0
+try:
+    data = pandas.read_csv("./data/words_to_learn.csv")
+except FileNotFoundError:
+    data = pandas.read_csv("./data/french_words.csv")
+    data_as_dict = pandas.DataFrame.to_dict(data, orient="records")
+else:
+    data_as_dict = pandas.DataFrame.to_dict(data, orient="records")
+
+current_card = {}
+
 
 def next_card():
     global current_card, flip_timer
-    #reset the timer
-    # window.after_cancel(flip_timer)
+    # reset the timer
+    window.after_cancel(flip_timer)
     current_card = random.choice(data_as_dict)
-    print(current_card)
-    #modify canvas text
+    # modify canvas text
     canvas.itemconfig(title, text="French", fill="black")
     canvas.itemconfig(word, text=current_card["French"], fill="black")
     canvas.itemconfig(canvas_image, image=front_img)
-    #set the timer to flip after 3 second
-    flip_timer = window.after(3000, flip_flashcard())
+    # set the timer to flip after 3 second
+    flip_timer = window.after(3000, flip_flashcard)
 
 
 def flip_flashcard():
@@ -35,9 +37,16 @@ def flip_flashcard():
     canvas.itemconfig(canvas_image, image=back_img)
 
 
-# def known_words():
-#     global known_words
-#     return known_words.append(current_card)
+def known_words():
+    data_as_dict.remove(current_card)
+    new_data = pandas.DataFrame(data_as_dict)
+    new_data.to_csv("./data/words_to_learn.csv", index=False)
+    next_card()
+
+
+# def convert_known_data_to_csv():
+#     new_data = pandas.DataFrame(data_as_dict)
+#     new_data.to_csv("./data/words_to_learn.csv")
 
 
 # -----------------------UI--------------------------------------
@@ -47,8 +56,8 @@ window = Tk()
 window.title("Flashy")
 window.minsize(width=900, height=626)
 window.config(bg=BACKGROUND_COLOR, padx=50, pady=50)
-
-flip_timer = window.after(3000, func=flip_flashcard)
+flip_timer = window.after(3000, flip_flashcard)
+# flip_timer = window.after(3000, func=flip_flashcard)
 
 canvas = Canvas(width=800, height=526)
 front_img = PhotoImage(file="./images/card_front.png")
@@ -70,5 +79,6 @@ right_button.grid(row=1, column=1)
 
 # call this function so to show a card when start
 next_card()
+# convert_known_data_to_csv()
 
 window.mainloop()
